@@ -1,16 +1,17 @@
-import { useState, useEffect } from 'react';
-import { FormData } from './types';
-import { calculateSLA } from './utils/slaCalculations';
-import { useTickets } from './hooks/useTickets';
-import { Header } from './components/Header';
-import { TicketForm } from './components/TicketForm';
-import { TicketList } from './components/TicketList';
-import { TicketGuidelines } from './components/TicketGuidelines';
-import { LoadingSpinner } from './components/LoadingSpinner';
-import { ErrorMessage } from './components/ErrorMessage';
-import { ConnectionStatus } from './components/ConnectionStatus';
-import { PRIORITY_SLA } from './constants';
-import { ticketsToCSV } from './services/ticketService';
+import { useState, useEffect } from "react";
+import { FormData } from "./types";
+import { calculateSLA } from "./utils/slaCalculations";
+import { useTickets } from "./hooks/useTickets";
+import { Header } from "./components/Header";
+import { TicketForm } from "./components/TicketForm";
+import { TicketList } from "./components/TicketList";
+import { TicketGuidelines } from "./components/TicketGuidelines";
+import { LoadingSpinner } from "./components/LoadingSpinner";
+import { ErrorMessage } from "./components/ErrorMessage";
+import { ConnectionStatus } from "./components/ConnectionStatus";
+import { PRIORITY_SLA } from "./constants";
+import { ticketsToCSV } from "./services/ticketService";
+import { Footer } from "./components/Footer";
 
 function App() {
   const {
@@ -20,26 +21,28 @@ function App() {
     addTicket: addTicketToFirebase,
     deleteTicket: deleteTicketFromFirebase,
     toggleHold: toggleHoldInFirebase,
-    clearError
+    clearError,
   } = useTickets();
 
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<FormData>({
-    ticketId: '',
-    description: '',
-    priority: 'P1',
-    createdAt: new Date().toISOString().slice(0, 16)
+    ticketId: "",
+    description: "",
+    priority: "P1",
+    createdAt: new Date().toISOString().slice(0, 16),
   });
-  const [search, setSearch] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState('');
+  const [search, setSearch] = useState("");
+  const [priorityFilter, setPriorityFilter] = useState("");
 
   // Filter tickets by search and priority
-  const filteredTickets = tickets.filter(ticket => {
+  const filteredTickets = tickets.filter((ticket) => {
     const matchesSearch =
       ticket.ticketId.toLowerCase().includes(search.toLowerCase()) ||
       ticket.description.toLowerCase().includes(search.toLowerCase());
-    const matchesPriority = priorityFilter ? ticket.priority === priorityFilter : true;
+    const matchesPriority = priorityFilter
+      ? ticket.priority === priorityFilter
+      : true;
     return matchesSearch && matchesPriority;
   });
 
@@ -61,20 +64,20 @@ function App() {
         slaEndTime: slaEndTime,
         isOnHold: false,
         holdStart: null,
-        adjustedSlaEndTime: slaEndTime
+        adjustedSlaEndTime: slaEndTime,
       };
 
       await addTicketToFirebase(newTicket);
 
       // Reset form
       setFormData({
-        ticketId: '',
-        description: '',
-        priority: 'P1',
-        createdAt: new Date().toISOString().slice(0, 16)
+        ticketId: "",
+        description: "",
+        priority: "P1",
+        createdAt: new Date().toISOString().slice(0, 16),
       });
     } catch (error) {
-      console.error('Failed to add ticket:', error);
+      console.error("Failed to add ticket:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -85,7 +88,7 @@ function App() {
     try {
       await deleteTicketFromFirebase(id);
     } catch (error) {
-      console.error('Failed to remove ticket:', error);
+      console.error("Failed to remove ticket:", error);
     }
   };
 
@@ -94,7 +97,7 @@ function App() {
     try {
       await toggleHoldInFirebase(id, currentTime);
     } catch (error) {
-      console.error('Failed to toggle hold status:', error);
+      console.error("Failed to toggle hold status:", error);
     }
   };
 
@@ -118,16 +121,11 @@ function App() {
     );
   }
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8 flex flex-col min-h-screen">
+      <div className="max-w-6xl mx-auto flex-1">
         <Header />
 
-        {error && (
-          <ErrorMessage
-            message={error}
-            onDismiss={clearError}
-          />
-        )}
+        {error && <ErrorMessage message={error} onDismiss={clearError} />}
 
         {/* Search and Filter Controls */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -136,34 +134,42 @@ function App() {
             placeholder="Search by Ticket ID or Description..."
             className="w-full sm:w-1/2 rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 border transition-colors"
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
           />
           <select
             className="w-full sm:w-48 rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 border transition-colors"
             value={priorityFilter}
-            onChange={e => setPriorityFilter(e.target.value)}
+            onChange={(e) => setPriorityFilter(e.target.value)}
           >
             <option value="">All Priorities</option>
-            {Object.keys(PRIORITY_SLA).map(prio => (
-              <option key={prio} value={prio}>{prio}</option>
+            {Object.keys(PRIORITY_SLA).map((prio) => (
+              <option key={prio} value={prio}>
+                {prio}
+              </option>
             ))}
           </select>
           <button
             className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg px-6 py-3 transition-colors shadow-sm"
             onClick={() => {
               const csv = ticketsToCSV(filteredTickets);
-              const blob = new Blob([csv], { type: 'text/csv' });
+              const blob = new Blob([csv], { type: "text/csv" });
               const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
+              const a = document.createElement("a");
               a.href = url;
-              a.download = `tickets-${new Date().toISOString().slice(0, 10)}.csv`;
+              a.download = `tickets-${new Date()
+                .toISOString()
+                .slice(0, 10)}.csv`;
               document.body.appendChild(a);
               a.click();
               document.body.removeChild(a);
               URL.revokeObjectURL(url);
             }}
             disabled={filteredTickets.length === 0}
-            title={filteredTickets.length === 0 ? 'No tickets to export' : 'Export tickets to CSV'}
+            title={
+              filteredTickets.length === 0
+                ? "No tickets to export"
+                : "Export tickets to CSV"
+            }
           >
             Export to CSV
           </button>
@@ -187,6 +193,7 @@ function App() {
 
         <ConnectionStatus />
       </div>
+      <Footer />
     </div>
   );
 }
