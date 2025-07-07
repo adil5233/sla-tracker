@@ -132,12 +132,12 @@ function App() {
           <input
             type="text"
             placeholder="Search by Ticket ID or Description..."
-            className="w-full sm:w-1/2 rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 border transition-colors"
+            className="w-full sm:w-1/2 rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs p-2 border transition-colors h-10"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
           <select
-            className="w-full sm:w-48 rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 border transition-colors"
+            className="w-full sm:w-48 rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs p-2 border transition-colors h-10"
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
           >
@@ -149,7 +149,7 @@ function App() {
             ))}
           </select>
           <button
-            className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg px-6 py-3 transition-colors shadow-sm"
+            className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg px-3 py-1 transition-colors shadow-sm text-xs h-10"
             onClick={() => {
               const csv = ticketsToCSV(filteredTickets);
               const blob = new Blob([csv], { type: "text/csv" });
