@@ -1,15 +1,15 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getAnalytics } from 'firebase/analytics';
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
+import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBZAP9enBrlyF7ll2DoVhwUuLWn0H7lJh0",
-  authDomain: "sla-tracker-8beb4.firebaseapp.com",
-  projectId: "sla-tracker-8beb4",
-  storageBucket: "sla-tracker-8beb4.firebasestorage.app",
-  messagingSenderId: "963995666263",
-  appId: "1:963995666263:web:345811588b107898696012",
-  measurementId: "G-7DZB82PZL9"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: "G-7DZB82PZL9",
 };
 
 // Initialize Firebase
@@ -19,6 +19,7 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 
 // Initialize Analytics (optional)
-export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
+export const analytics =
+  typeof window !== "undefined" ? getAnalytics(app) : null;
 
 export default app;
