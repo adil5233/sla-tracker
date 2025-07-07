@@ -122,22 +122,22 @@ function App() {
   }
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8 flex flex-col min-h-screen">
-      <div className="max-w-6xl mx-auto flex-1">
+      <div className="w-full max-w-3xl mx-auto flex-1 px-4">
         <Header />
 
         {error && <ErrorMessage message={error} onDismiss={clearError} />}
 
         {/* Search and Filter Controls */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="w-full flex flex-col sm:flex-row sm:items-center gap-y-2 gap-x-4 mb-8">
           <input
             type="text"
             placeholder="Search by Ticket ID or Description..."
-            className="w-full sm:w-1/2 rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs p-2 border transition-colors h-10"
+            className="flex-1 min-w-0 rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs p-2 border transition-colors h-10"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
           <select
-            className="w-full sm:w-48 rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs p-2 border transition-colors h-10"
+            className="sm:w-40 w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs p-2 border transition-colors h-10"
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
           >
@@ -149,7 +149,7 @@ function App() {
             ))}
           </select>
           <button
-            className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg px-3 py-1 transition-colors shadow-sm text-xs h-10"
+            className="sm:w-auto w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg px-3 py-1 transition-colors shadow-sm text-xs h-10"
             onClick={() => {
               const csv = ticketsToCSV(filteredTickets);
               const blob = new Blob([csv], { type: "text/csv" });
@@ -175,19 +175,27 @@ function App() {
           </button>
         </div>
 
-        <TicketForm
-          formData={formData}
-          setFormData={setFormData}
-          addTicket={addTicket}
-          isSubmitting={isSubmitting}
-        />
+        <div className="mb-8 w-full overflow-x-auto">
+          <div className="w-full">
+            <TicketForm
+              formData={formData}
+              setFormData={setFormData}
+              addTicket={addTicket}
+              isSubmitting={isSubmitting}
+            />
+          </div>
+        </div>
 
-        <TicketList
-          tickets={filteredTickets}
-          currentTime={currentTime}
-          removeTicket={removeTicket}
-          toggleHold={toggleHold}
-        />
+        <div className="mb-8 w-full overflow-x-auto">
+          <div className="w-full min-h-[300px]">
+            <TicketList
+              tickets={filteredTickets}
+              currentTime={currentTime}
+              removeTicket={removeTicket}
+              toggleHold={toggleHold}
+            />
+          </div>
+        </div>
 
         <TicketGuidelines />
 
