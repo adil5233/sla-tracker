@@ -1,11 +1,11 @@
-import { 
-  collection, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
-  onSnapshot, 
-  query, 
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  query,
   orderBy,
   Timestamp,
   DocumentData,
@@ -61,8 +61,8 @@ export const addTicket = async (ticket: Omit<Ticket, 'id'>): Promise<string> => 
 export const updateTicket = async (ticketId: string, updates: Partial<Ticket>): Promise<void> => {
   try {
     const ticketRef = doc(db, COLLECTION_NAME, ticketId);
-    const firestoreUpdates: any = {};
-    
+    const firestoreUpdates: Record<string, unknown> = {};
+
     // Convert Date objects to Timestamps for Firestore
     Object.entries(updates).forEach(([key, value]) => {
       if (value instanceof Date) {
@@ -71,8 +71,9 @@ export const updateTicket = async (ticketId: string, updates: Partial<Ticket>): 
         firestoreUpdates[key] = value;
       }
     });
-    
-    await updateDoc(ticketRef, firestoreUpdates);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await updateDoc(ticketRef, firestoreUpdates as any);
   } catch (error) {
     console.error('Error updating ticket:', error);
     throw new Error('Failed to update ticket');
@@ -95,7 +96,7 @@ export const subscribeToTickets = (
   onError?: (error: Error) => void
 ) => {
   const q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
-  
+
   return onSnapshot(
     q,
     (snapshot: QuerySnapshot) => {
@@ -113,3 +114,29 @@ export const subscribeToTickets = (
     }
   );
 };
+
+// Utility: Export tickets to CSV
+export function ticketsToCSV(tickets: Ticket[]): string {
+  if (!tickets.length) return '';
+  const header = [
+    'Ticket ID',
+    'Description',
+    'Priority',
+    'Created At',
+    'SLA End Time',
+    'Is On Hold',
+    'Hold Start',
+    'Adjusted SLA End Time'
+  ];
+  const rows = tickets.map(ticket => [
+    ticket.ticketId,
+    ticket.description.replace(/\n/g, ' '),
+    ticket.priority,
+    ticket.createdAt.toISOString(),
+    ticket.slaEndTime.toISOString(),
+    ticket.isOnHold ? 'Yes' : 'No',
+    ticket.holdStart ? ticket.holdStart.toISOString() : '',
+    ticket.adjustedSlaEndTime.toISOString()
+  ]);
+  return [header, ...rows].map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+}

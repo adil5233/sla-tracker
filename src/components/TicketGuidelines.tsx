@@ -1,5 +1,6 @@
 import { Info } from 'lucide-react';
 import { PRIORITY_SLA } from '../constants';
+import { Priority } from '../types';
 import { PriorityGuideline } from './PriorityGuideline';
 
 export function TicketGuidelines() {
@@ -11,10 +12,10 @@ export function TicketGuidelines() {
       </h2>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
         {Object.entries(PRIORITY_SLA).map(([priority, hours]) => (
-          <PriorityGuideline 
-            key={priority} 
-            priority={priority as any} 
-            hours={hours} 
+          <PriorityGuideline
+            key={priority}
+            priority={priority as Priority}
+            hours={hours}
           />
         ))}
       </div>
