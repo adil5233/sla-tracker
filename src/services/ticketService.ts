@@ -9,12 +9,19 @@ import {
   orderBy,
   Timestamp,
   DocumentData,
-  QuerySnapshot
-} from 'firebase/firestore';
-import { db } from '../config/firebase';
-import { Ticket } from '../types';
+  QuerySnapshot,
+} from "firebase/firestore";
+import { db } from "../config/firebase";
+import { Ticket } from "../types";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged as firebaseOnAuthStateChanged,
+  User,
+} from "firebase/auth";
 
-const COLLECTION_NAME = 'tickets';
+const COLLECTION_NAME = "tickets";
 
 // Convert Firestore document to Ticket type
 export const convertFirestoreToTicket = (doc: DocumentData): Ticket => {
@@ -28,12 +35,12 @@ export const convertFirestoreToTicket = (doc: DocumentData): Ticket => {
     slaEndTime: data.slaEndTime.toDate(),
     isOnHold: data.isOnHold || false,
     holdStart: data.holdStart ? data.holdStart.toDate() : null,
-    adjustedSlaEndTime: data.adjustedSlaEndTime.toDate()
+    adjustedSlaEndTime: data.adjustedSlaEndTime.toDate(),
   };
 };
 
 // Convert Ticket to Firestore format
-export const convertTicketToFirestore = (ticket: Omit<Ticket, 'id'>) => {
+export const convertTicketToFirestore = (ticket: Omit<Ticket, "id">) => {
   return {
     ticketId: ticket.ticketId,
     description: ticket.description,
@@ -42,23 +49,31 @@ export const convertTicketToFirestore = (ticket: Omit<Ticket, 'id'>) => {
     slaEndTime: Timestamp.fromDate(ticket.slaEndTime),
     isOnHold: ticket.isOnHold,
     holdStart: ticket.holdStart ? Timestamp.fromDate(ticket.holdStart) : null,
-    adjustedSlaEndTime: Timestamp.fromDate(ticket.adjustedSlaEndTime)
+    adjustedSlaEndTime: Timestamp.fromDate(ticket.adjustedSlaEndTime),
   };
 };
 
 // Add a new ticket
-export const addTicket = async (ticket: Omit<Ticket, 'id'>): Promise<string> => {
+export const addTicket = async (
+  ticket: Omit<Ticket, "id">
+): Promise<string> => {
   try {
-    const docRef = await addDoc(collection(db, COLLECTION_NAME), convertTicketToFirestore(ticket));
+    const docRef = await addDoc(
+      collection(db, COLLECTION_NAME),
+      convertTicketToFirestore(ticket)
+    );
     return docRef.id;
   } catch (error) {
-    console.error('Error adding ticket:', error);
-    throw new Error('Failed to add ticket');
+    console.error("Error adding ticket:", error);
+    throw new Error("Failed to add ticket");
   }
 };
 
 // Update a ticket
-export const updateTicket = async (ticketId: string, updates: Partial<Ticket>): Promise<void> => {
+export const updateTicket = async (
+  ticketId: string,
+  updates: Partial<Ticket>
+): Promise<void> => {
   try {
     const ticketRef = doc(db, COLLECTION_NAME, ticketId);
     const firestoreUpdates: Record<string, unknown> = {};
@@ -75,8 +90,8 @@ export const updateTicket = async (ticketId: string, updates: Partial<Ticket>): 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await updateDoc(ticketRef, firestoreUpdates as any);
   } catch (error) {
-    console.error('Error updating ticket:', error);
-    throw new Error('Failed to update ticket');
+    console.error("Error updating ticket:", error);
+    throw new Error("Failed to update ticket");
   }
 };
 
@@ -85,8 +100,8 @@ export const deleteTicket = async (ticketId: string): Promise<void> => {
   try {
     await deleteDoc(doc(db, COLLECTION_NAME, ticketId));
   } catch (error) {
-    console.error('Error deleting ticket:', error);
-    throw new Error('Failed to delete ticket');
+    console.error("Error deleting ticket:", error);
+    throw new Error("Failed to delete ticket");
   }
 };
 
@@ -95,7 +110,10 @@ export const subscribeToTickets = (
   callback: (tickets: Ticket[]) => void,
   onError?: (error: Error) => void
 ) => {
-  const q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
+  const q = query(
+    collection(db, COLLECTION_NAME),
+    orderBy("createdAt", "desc")
+  );
 
   return onSnapshot(
     q,
@@ -104,39 +122,58 @@ export const subscribeToTickets = (
         const tickets = snapshot.docs.map(convertFirestoreToTicket);
         callback(tickets);
       } catch (error) {
-        console.error('Error processing tickets snapshot:', error);
-        onError?.(new Error('Failed to process tickets data'));
+        console.error("Error processing tickets snapshot:", error);
+        onError?.(new Error("Failed to process tickets data"));
       }
     },
     (error) => {
-      console.error('Error in tickets subscription:', error);
-      onError?.(new Error('Failed to sync tickets'));
+      console.error("Error in tickets subscription:", error);
+      onError?.(new Error("Failed to sync tickets"));
     }
   );
 };
 
 // Utility: Export tickets to CSV
 export function ticketsToCSV(tickets: Ticket[]): string {
-  if (!tickets.length) return '';
+  if (!tickets.length) return "";
   const header = [
-    'Ticket ID',
-    'Description',
-    'Priority',
-    'Created At',
-    'SLA End Time',
-    'Is On Hold',
-    'Hold Start',
-    'Adjusted SLA End Time'
+    "Ticket ID",
+    "Description",
+    "Priority",
+    "Created At",
+    "SLA End Time",
+    "Is On Hold",
+    "Hold Start",
+    "Adjusted SLA End Time",
   ];
-  const rows = tickets.map(ticket => [
+  const rows = tickets.map((ticket) => [
     ticket.ticketId,
-    ticket.description.replace(/\n/g, ' '),
+    ticket.description.replace(/\n/g, " "),
     ticket.priority,
     ticket.createdAt.toISOString(),
     ticket.slaEndTime.toISOString(),
-    ticket.isOnHold ? 'Yes' : 'No',
-    ticket.holdStart ? ticket.holdStart.toISOString() : '',
-    ticket.adjustedSlaEndTime.toISOString()
+    ticket.isOnHold ? "Yes" : "No",
+    ticket.holdStart ? ticket.holdStart.toISOString() : "",
+    ticket.adjustedSlaEndTime.toISOString(),
   ]);
-  return [header, ...rows].map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+  return [header, ...rows]
+    .map((row) =>
+      row.map((field) => `"${String(field).replace(/"/g, '""')}"`).join(",")
+    )
+    .join("\r\n");
+}
+
+// Firebase Auth utilities
+const auth = getAuth();
+
+export function loginWithEmail(email: string, password: string) {
+  return signInWithEmailAndPassword(auth, email, password);
+}
+
+export function logout() {
+  return signOut(auth);
+}
+
+export function onAuthStateChanged(callback: (user: User | null) => void) {
+  return firebaseOnAuthStateChanged(auth, callback);
 }
